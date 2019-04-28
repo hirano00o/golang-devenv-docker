@@ -11,18 +11,22 @@ RUN ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
 # compile and install vim
 RUN rpm --rebuilddb && yum update -y && \
     yum -y install git gcc ncurses-devel make && \
-    yum -y install httpd which && \
+    yum -y install httpd which python-devel&& \
     rm -rf /var/cache/yum/* && \
     yum clean all
 
 WORKDIR /usr/local/src/
 RUN git clone https://github.com/vim/vim.git && \
     cd vim && \
+    ./configure --enable-pythoninterp=yes && \
     make && make install && make clean && \
-    rm -rf vim
+    cd ../ && rm -rf vim
 
 # Your .vimrc
-# ADD .vimrc ~/
+ADD .vimrc ${HOME}/
+RUN curl -fLo ${HOME}/.vim/autoload/plug.vim --create-dirs \
+    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+RUN vim -c PlugInstall -c q -c q
 
 # get golang and set $GOPATH
 WORKDIR ${GO_INSTALL_DIR}
